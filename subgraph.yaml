@@ -1,26 +1,51 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
-    name: Contract
+    name: NiftyInk
     network: xdai
     source:
       address: "0x49dE55fbA08af88f55EB797a456fdf76B151c8b0"
-      abi: Contract
+      abi: NiftyInk
+      startBlock: 11296637
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.2
+      apiVersion: 0.0.4
       language: wasm/assemblyscript
       entities:
-        - OwnershipTransferred
-        - newInk
+        - Ink
+        - Artist
       abis:
-        - name: Contract
-          file: ./abis/Contract.json
+        - name: NiftyInk
+          file: ./abis/NiftyInk.json
       eventHandlers:
-        - event: OwnershipTransferred(indexed address,indexed address)
-          handler: handleOwnershipTransferred
         - event: newInk(uint256,indexed address,string,string,uint256)
           handler: handlenewInk
+      #callHandlers:
+        #- function: setPrice(string,uint256)
+          #handler: handleSetPrice
+      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: NiftyToken
+    network: xdai
+    source:
+      address: "0xCF964c89f509a8c0Ac36391c5460dF94B91daba5"
+      abi: NiftyToken
+      startBlock: 11296637
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Ink
+        - Token
+      abis:
+        - name: NiftyToken
+          file: ./abis/NiftyToken.json
+      eventHandlers:
+        - event: mintedInk(uint256,string,address)
+          handler: handleMintedInk
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
       file: ./src/mapping.ts

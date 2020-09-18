@@ -1,6 +1,65 @@
-type ExampleEntity @entity {
+enum SaleType {
+  primary
+  secondary
+}
+
+enum Network {
+  xdai
+  mainnet
+}
+
+type Ink @entity {
   id: ID!
-  count: BigInt!
-  previousOwner: Bytes! # address
-  newOwner: Bytes! # address
+  inkId: BigInt!
+  jsonUrl: String!
+  artist: Artist!
+  limit: BigInt!
+  count: BigInt
+  tokens: [Token!] @derivedFrom(field: "ink")
+  sales: [Sale!] @derivedFrom(field: "ink")
+  createdAt: BigInt
+  mintPrice: BigInt
+}
+
+type Token @entity {
+  id: ID!
+  ink: Ink!
+  owner: Bytes!
+  createdAt: BigInt!
+  network: Network!
+  price: BigInt
+  transfers: [TokenTransfer!] @derivedFrom(field: "token")
+  sales: [Sale!] @derivedFrom(field: "token")
+}
+
+type Artist @entity {
+  id: ID!
+  address: Bytes!
+  inks: [Ink]! @derivedFrom(field: "artist")
+  inkCount: BigInt!
+  earnings: BigInt
+  sales: [Sale!] @derivedFrom(field: "artist")
+}
+
+type Sale @entity {
+  id: ID!
+  type: String!
+  buyer: Bytes!
+  seller: Bytes!
+  price: BigInt!
+  token: Token!
+  ink: Ink!
+  artist: Artist!
+  createdAt: BigInt!
+  artistEarnings: BigInt!
+  saleType: SaleType!
+  transfer: TokenTransfer!
+}
+
+type TokenTransfer @entity {
+  id: ID!
+  token: Token!
+  from: Bytes!
+  to: Bytes!
+  createdAt: BigInt!
 }
