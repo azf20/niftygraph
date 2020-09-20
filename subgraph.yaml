@@ -55,3 +55,52 @@ dataSources:
         - event: mintedInk(uint256,string,address)
           handler: handleMintedInk
       file: ./src/mapping.ts
+#  - kind: ethereum/contract
+#    name: NiftyMain
+#    network: mainnet
+#    source:
+#      address: "0xc02697c417DdAcfbe5EdbF23eDad956BC883F4fb"
+#      abi: NiftyMain
+#      startBlock: 10609660
+#    mapping:
+#      kind: ethereum/events
+#      apiVersion: 0.0.4
+#      language: wasm/assemblyscript
+#      entities:
+#        - Token
+#        - Transfer
+#      abis:
+#        - name: NiftyMain
+#          file: ./abis/NiftyMain.json
+#        - name: NiftyToken
+#          file: ./abis/NiftyToken.json
+#      eventHandlers:
+#        - event: Transfer(indexed address,indexed address,indexed uint256)
+#          handler: handleTransfer
+#        - event: mintedInk(uint256,string,address)
+#          handler: handleMintedOnMain
+#      file: ./src/mapping.ts
+  - kind: ethereum/contract
+    name: NiftyMediator
+    network: xdai
+    source:
+      address: "0x73cA9C4e72fF109259cf7374F038faf950949C51"
+      abi: NiftyMediator
+      startBlock: 11296637
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      entities:
+        - Token
+      abis:
+        - name: NiftyMediator
+          file: ./abis/NiftyMediator.json
+        - name: NiftyToken
+          file: ./abis/NiftyToken.json
+      eventHandlers:
+        - event: tokenSentViaBridge(uint256,bytes32)
+          handler: handleTokenSentViaBridge
+        - event: newPrice(uint256)
+          handler: handleNewRelayPrice
+      file: ./src/mapping.ts

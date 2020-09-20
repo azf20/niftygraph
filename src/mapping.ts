@@ -11,7 +11,12 @@ import {
   SetTokenPriceCall,
   boughtInk
 } from "../generated/NiftyToken/NiftyToken"
-import { Ink, Artist, Token, TokenTransfer, Sale } from "../generated/schema"
+import {
+  NiftyMediator,
+  newPrice,
+  tokenSentViaBridge
+} from "../generated/NiftyMediator/NiftyMediator"
+import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice } from "../generated/schema"
 
   // Note: If a handler doesn't require existing field values, it is faster
   // _not_ to load the entity from the store. Instead, create it fresh with
@@ -130,6 +135,13 @@ export function handleTransfer(event: Transfer): void {
   transfer.from = event.params.from
   transfer.createdAt = event.block.timestamp
 
+  if(event.address == Address.fromString("0xCF964c89f509a8c0Ac36391c5460dF94B91daba5")) {
+    transfer.network = 'xdai'
+  }
+  if(event.address == Address.fromString("0xc02697c417DdAcfbe5EdbF23eDad956BC883F4fb")) {
+    transfer.network = 'mainnet'
+  }
+
   transfer.save()
 }
 
@@ -173,4 +185,39 @@ export function handleBoughtInk(event: boughtInk): void {
   sale.transfer = event.transaction.hash.toHex()
 
   sale.save()
+}
+
+export function handleMintedOnMain (event: mintedInk): void {
+
+  let token = Token.load(event.params.id.toString())
+
+  token.network = "mainnet"
+  token.upgradeTransfer = event.transaction.hash.toHex()
+
+  token.save()
+}
+
+export function handleTokenSentViaBridge (event: tokenSentViaBridge): void {
+
+  let token = Token.load(event.params._tokenId.toString())
+
+  token.network = "mainnet"
+  token.upgradeTransfer = event.transaction.hash.toHex()
+
+  token.save()
+}
+
+export function handleNewRelayPrice (event: newPrice): void {
+
+  let currentPrice = RelayPrice.load("current")
+
+  if (currentPrice !== null) {
+    currentPrice.id = currentPrice.createdAt.toString()
+    currentPrice.save()
+  }
+
+  let updatedPrice = new RelayPrice("current")
+  updatedPrice.price = event.params.price
+  updatedPrice.createdAt = event.block.timestamp
+  updatedPrice.save()
 }
