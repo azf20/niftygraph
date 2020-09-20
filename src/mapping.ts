@@ -1,4 +1,4 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, Address } from "@graphprotocol/graph-ts"
 import {
   NiftyInk,
   newInk,
@@ -8,9 +8,10 @@ import {
   NiftyToken,
   mintedInk,
   Transfer,
-  SetTokenPriceCall
+  SetTokenPriceCall,
+  boughtInk
 } from "../generated/NiftyToken/NiftyToken"
-import { Ink, Artist, Token, TokenTransfer } from "../generated/schema"
+import { Ink, Artist, Token, TokenTransfer, Sale } from "../generated/schema"
 
   // Note: If a handler doesn't require existing field values, it is faster
   // _not_ to load the entity from the store. Instead, create it fresh with
@@ -122,7 +123,7 @@ export function handleTransfer(event: Transfer): void {
     token.save()
   }
 
-  let transfer = new TokenTransfer(event.transaction.hash.toHex() + "-" + event.logIndex.toString())
+  let transfer = new TokenTransfer(event.transaction.hash.toHex())
 
   transfer.token = tokenId
   transfer.to = event.params.to
@@ -130,4 +131,46 @@ export function handleTransfer(event: Transfer): void {
   transfer.createdAt = event.block.timestamp
 
   transfer.save()
+}
+
+export function handleBoughtInk(event: boughtInk): void {
+
+  let sale = new Sale(event.transaction.hash.toHex() + "-" + event.logIndex.toString())
+
+  let tokenId = event.params.id.toString()
+
+  let token = Token.load(tokenId)
+  let ink = Ink.load(event.params.inkUrl)
+  let artist = Artist.load(ink.artist)
+  let transfer = TokenTransfer.load(event.transaction.hash.toHex())
+
+  //let contract = NiftyInk.bind(Address.fromString("0x49dE55fbA08af88f55EB797a456fdf76B151c8b0"))
+  //let artistTake = contract.artistTake()
+
+  if (transfer !== null) {
+    if (transfer.from == Address.fromString("0x0000000000000000000000000000000000000000") || transfer.from == artist.address) {
+      sale.saleType = "primary"
+      sale.artistTake = event.transaction.value
+      sale.seller = artist.address
+    } else {
+      sale.saleType = "secondary"
+      sale.artistTake = (((event.transaction.value).times(BigInt.fromI32(1))) / BigInt.fromI32(100))
+      sale.seller = transfer.from
+    }
+  }
+
+  if (token !== null) {
+    token.price = BigInt.fromI32(0)
+    token.save()
+  }
+
+  sale.token = tokenId
+  sale.price = event.transaction.value
+  sale.buyer = event.transaction.from
+  sale.artist = ink.artist
+  sale.ink = event.params.inkUrl
+  sale.createdAt = event.block.timestamp
+  sale.transfer = event.transaction.hash.toHex()
+
+  sale.save()
 }

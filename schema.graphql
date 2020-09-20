@@ -43,16 +43,15 @@ type Artist @entity {
 
 type Sale @entity {
   id: ID!
-  type: String!
   buyer: Bytes!
-  seller: Bytes!
+  seller: Bytes
   price: BigInt!
   token: Token!
   ink: Ink!
   artist: Artist!
   createdAt: BigInt!
-  artistEarnings: BigInt!
-  saleType: SaleType!
+  artistTake: BigInt!
+  saleType: SaleType
   transfer: TokenTransfer!
 }
 

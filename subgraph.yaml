@@ -40,12 +40,18 @@ dataSources:
       entities:
         - Ink
         - Token
+        - Sale
+        - Transfer
       abis:
         - name: NiftyToken
           file: ./abis/NiftyToken.json
+        - name: NiftyInk
+          file: ./abis/NiftyInk.json
       eventHandlers:
-        - event: mintedInk(uint256,string,address)
-          handler: handleMintedInk
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
+        - event: boughtInk(uint256,string,address,uint256)
+          handler: handleBoughtInk
+        - event: mintedInk(uint256,string,address)
+          handler: handleMintedInk
       file: ./src/mapping.ts
