@@ -10,15 +10,19 @@ enum Network {
 
 type Ink @entity {
   id: ID!
-  inkId: BigInt!
+  inkNumber: BigInt!
   jsonUrl: String!
   artist: Artist!
+  name: String
+  description: String
+  image: String
   limit: BigInt!
   count: BigInt
   tokens: [Token!] @derivedFrom(field: "ink")
   sales: [Sale!] @derivedFrom(field: "ink")
   createdAt: BigInt
   mintPrice: BigInt
+  mintPriceSetAt: BigInt
 }
 
 type Token @entity {
@@ -28,6 +32,7 @@ type Token @entity {
   createdAt: BigInt!
   network: Network!
   price: BigInt
+  priceSetAt: BigInt
   transfers: [TokenTransfer!] @derivedFrom(field: "token")
   sales: [Sale!] @derivedFrom(field: "token")
   upgradeTransfer: TokenTransfer
@@ -69,4 +74,14 @@ type RelayPrice @entity {
   id: ID!
   createdAt: BigInt!
   price: BigInt!
+}
+
+type Total @entity {
+  id: ID!
+  day: BigInt
+  inks: BigInt
+  tokens: BigInt
+  sales: BigInt
+  upgrades: BigInt
+  artists: BigInt
 }

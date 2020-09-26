@@ -1,4 +1,4 @@
-import { BigInt, Address } from "@graphprotocol/graph-ts"
+import { BigInt, Address, ipfs, json, JSONValueKind, log } from "@graphprotocol/graph-ts"
 import {
   NiftyInk,
   newInk,
@@ -16,42 +16,44 @@ import {
   newPrice,
   tokenSentViaBridge
 } from "../generated/NiftyMediator/NiftyMediator"
-import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice } from "../generated/schema"
+import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total } from "../generated/schema"
 
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
+ function incrementTotal(metric: String, timestamp: BigInt): void {
 
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.artistTake(...)
-  // - contract.checkSignature(...)
-  // - contract.checkSignatureFlag(...)
-  // - contract.createInk(...)
-  // - contract.createInkFromSignature(...)
-  // - contract.getSigner(...)
-  // - contract.getTrustedForwarder(...)
-  // - contract.inkIdByInkUrl(...)
-  // - contract.inkInfoById(...)
-  // - contract.inkInfoByInkUrl(...)
-  // - contract.inkOfArtistByIndex(...)
-  // - contract.inksCreatedBy(...)
-  // - contract.isTrustedForwarder(...)
-  // - contract.niftyRegistry(...)
-  // - contract.owner(...)
-  // - contract.setPrice(...)
-  // - contract.setPriceFromSignature(...)
-  // - contract.totalInks(...)
-  // - contract.versionRecipient(...)
+    let stats = Total.load("latest")
+    let day = timestamp / BigInt.fromI32(86400)
+
+    if (stats == null) {
+      stats = new Total("latest")
+    } else {
+      if (stats.day !== day) {
+        let yesterdayStats = stats
+        yesterdayStats.id = stats.day.toString()
+        yesterdayStats.save()
+        stats.id = "latest"
+      }
+    }
+
+    stats.day = day
+
+    if(metric == 'inks') {
+      stats.inks = stats.inks + BigInt.fromI32(1)
+    }
+    else if (metric == 'tokens') {
+      stats.tokens = stats.tokens + BigInt.fromI32(1)
+    }
+    else if (metric == 'upgrades') {
+      stats.upgrades = stats.upgrades + BigInt.fromI32(1)
+    }
+    else if (metric == 'sales') {
+      stats.sales = stats.sales + BigInt.fromI32(1)
+    }
+    else if (metric == 'artists') {
+      stats.artists = stats.artists + BigInt.fromI32(1)
+    }
+
+    stats.save()
+  }
 
 export function handlenewInk(event: newInk): void {
 
@@ -61,6 +63,7 @@ export function handlenewInk(event: newInk): void {
     artist = new Artist(event.params.artist.toHexString())
     artist.address = event.params.artist
     artist.inkCount = BigInt.fromI32(1)
+    incrementTotal('artists',event.block.timestamp)
   }
   else {
     artist.inkCount = artist.inkCount.plus(BigInt.fromI32(1))
@@ -72,7 +75,23 @@ export function handlenewInk(event: newInk): void {
     ink = new Ink(event.params.inkUrl)
   }
 
-  ink.inkId = event.params.id
+  let jsonBytes = ipfs.cat(event.params.jsonUrl)
+  if (jsonBytes !== null) {
+    let data = json.fromBytes(jsonBytes!);
+    if (data !== null) {
+      if (data.kind !== JSONValueKind.OBJECT) {
+        log.debug('[mapping] [loadIpfs] JSON data from IPFS is not an OBJECT', [
+        ]);
+    } else {
+        let obj = data.toObject();
+        ink.name = obj.get("name").toString();
+        ink.image = obj.get("image").toString();
+        ink.description = obj.get("description").toString();
+      }
+  }
+  }
+
+  ink.inkNumber = event.params.id
   ink.artist = artist.id
   ink.limit = event.params.limit
   ink.jsonUrl = event.params.jsonUrl
@@ -80,20 +99,28 @@ export function handlenewInk(event: newInk): void {
 
   ink.save()
   artist.save()
+
+  incrementTotal('inks',event.block.timestamp)
 }
 
 export function handleSetPrice(call: SetPriceCall): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
+
   let ink = Ink.load(call.inputs.inkUrl)
 
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-
-  // Entity fields can be set based on event parameters
   ink.mintPrice = call.inputs.price
+  ink.mintPriceSetAt = call.block.timestamp
 
   ink.save()
+}
+
+export function handleSetTokenPrice(call: SetTokenPriceCall): void {
+
+  let token = Token.load(call.inputs._tokenId.toString())
+
+  token.price = call.inputs._price
+  token.priceSetAt = call.block.timestamp
+
+  token.save()
 }
 
 export function handleMintedInk(event: mintedInk): void {
@@ -115,6 +142,8 @@ export function handleMintedInk(event: mintedInk): void {
 
   ink.save()
   token.save()
+
+  incrementTotal('tokens',event.block.timestamp)
 }
 
 export function handleTransfer(event: Transfer): void {
@@ -125,6 +154,8 @@ export function handleTransfer(event: Transfer): void {
 
   if (token !== null) {
     token.owner = event.params.to
+    token.price = null
+    token.priceSetAt = null
     token.save()
   }
 
@@ -185,6 +216,8 @@ export function handleBoughtInk(event: boughtInk): void {
   sale.transfer = event.transaction.hash.toHex()
 
   sale.save()
+
+  incrementTotal('sales',event.block.timestamp)
 }
 
 export function handleMintedOnMain (event: mintedInk): void {
@@ -205,6 +238,8 @@ export function handleTokenSentViaBridge (event: tokenSentViaBridge): void {
   token.upgradeTransfer = event.transaction.hash.toHex()
 
   token.save()
+
+  incrementTotal('upgrades',event.block.timestamp)
 }
 
 export function handleNewRelayPrice (event: newPrice): void {
