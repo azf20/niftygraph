@@ -1,64 +1,17 @@
-enum SaleType {
-  primary
-  secondary
-}
-
 enum Network {
   xdai
   mainnet
 }
 
-type Ink @entity {
-  id: ID!
-  inkNumber: BigInt!
-  jsonUrl: String!
-  artist: Artist!
-  name: String
-  description: String
-  image: String
-  limit: BigInt!
-  count: BigInt
-  tokens: [Token!] @derivedFrom(field: "ink")
-  sales: [Sale!] @derivedFrom(field: "ink")
-  createdAt: BigInt
-  mintPrice: BigInt
-  mintPriceSetAt: BigInt
-}
-
 type Token @entity {
   id: ID!
-  ink: Ink!
+  ink: String!
+  jsonUrl: String!
   owner: Bytes!
   createdAt: BigInt!
   network: Network!
-  price: BigInt
-  priceSetAt: BigInt
   transfers: [TokenTransfer!] @derivedFrom(field: "token")
-  sales: [Sale!] @derivedFrom(field: "token")
   upgradeTransfer: TokenTransfer
-}
-
-type Artist @entity {
-  id: ID!
-  address: Bytes!
-  inks: [Ink]! @derivedFrom(field: "artist")
-  inkCount: BigInt!
-  earnings: BigInt
-  sales: [Sale!] @derivedFrom(field: "artist")
-}
-
-type Sale @entity {
-  id: ID!
-  buyer: Bytes!
-  seller: Bytes
-  price: BigInt!
-  token: Token!
-  ink: Ink!
-  artist: Artist!
-  createdAt: BigInt!
-  artistTake: BigInt!
-  saleType: SaleType
-  transfer: TokenTransfer!
 }
 
 type TokenTransfer @entity {
@@ -68,20 +21,4 @@ type TokenTransfer @entity {
   to: Bytes!
   createdAt: BigInt!
   network: Network!
-}
-
-type RelayPrice @entity {
-  id: ID!
-  createdAt: BigInt!
-  price: BigInt!
-}
-
-type Total @entity {
-  id: ID!
-  day: BigInt
-  inks: BigInt
-  tokens: BigInt
-  sales: BigInt
-  upgrades: BigInt
-  artists: BigInt
 }
