@@ -13,9 +13,6 @@ type Ink @entity {
   inkNumber: BigInt!
   jsonUrl: String!
   artist: Artist!
-  name: String
-  description: String
-  image: String
   limit: BigInt!
   count: BigInt
   tokens: [Token!] @derivedFrom(field: "ink")
@@ -23,6 +20,7 @@ type Ink @entity {
   createdAt: BigInt
   mintPrice: BigInt
   mintPriceSetAt: BigInt
+  mintPriceNonce: BigInt
 }
 
 type Token @entity {

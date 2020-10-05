@@ -21,7 +21,7 @@ import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total } from "../g
  function incrementTotal(metric: String, timestamp: BigInt): void {
 
     let stats = Total.load("latest")
-    let day = timestamp / BigInt.fromI32(86400)
+    let day = (timestamp / BigInt.fromI32(86400)) * BigInt.fromI32(86400)
 
     if (stats == null) {
       stats = new Total("latest")
@@ -75,21 +75,21 @@ export function handlenewInk(event: newInk): void {
     ink = new Ink(event.params.inkUrl)
   }
 
-  let jsonBytes = ipfs.cat(event.params.jsonUrl)
-  if (jsonBytes !== null) {
-    let data = json.fromBytes(jsonBytes!);
-    if (data !== null) {
-      if (data.kind !== JSONValueKind.OBJECT) {
-        log.debug('[mapping] [loadIpfs] JSON data from IPFS is not an OBJECT', [
-        ]);
-    } else {
-        let obj = data.toObject();
-        ink.name = obj.get("name").toString();
-        ink.image = obj.get("image").toString();
-        ink.description = obj.get("description").toString();
-      }
-  }
-  }
+//  let jsonBytes = ipfs.cat(event.params.jsonUrl)
+//  if (jsonBytes !== null) {
+//    let data = json.fromBytes(jsonBytes!);
+//    if (data !== null) {
+//      if (data.kind !== JSONValueKind.OBJECT) {
+//        log.debug('[mapping] [loadIpfs] JSON data from IPFS is not an OBJECT', [
+//        ]);
+//    } else {
+//        let obj = data.toObject();
+//        ink.name = obj.get("name").toString();
+//        ink.image = obj.get("image").toString();
+//        ink.description = obj.get("description").toString();
+//      }
+//  }
+//  }
 
   ink.inkNumber = event.params.id
   ink.artist = artist.id
@@ -109,6 +109,7 @@ export function handleSetPrice(call: SetPriceCall): void {
 
   ink.mintPrice = call.inputs.price
   ink.mintPriceSetAt = call.block.timestamp
+  ink.mintPriceNonce = ink.mintPriceNonce + BigInt.fromI32(1)
 
   ink.save()
 }
