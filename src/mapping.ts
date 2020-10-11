@@ -2,7 +2,8 @@ import { BigInt, Address, ipfs, json, JSONValueKind, log } from "@graphprotocol/
 import {
   NiftyInk,
   newInk,
-  SetPriceCall
+  SetPriceCall,
+  SetPriceFromSignatureCall
 } from "../generated/NiftyInk/NiftyInk"
 import {
   NiftyToken,
@@ -16,7 +17,14 @@ import {
   newPrice,
   tokenSentViaBridge
 } from "../generated/NiftyMediator/NiftyMediator"
-import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total } from "../generated/schema"
+import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total, MetaData } from "../generated/schema"
+
+
+ function updateMetaData(metric: String, value: String): void {
+   let metaData = new MetaData(metric)
+   metaData.value = value
+   metaData.save()
+ }
 
  function incrementTotal(metric: String, timestamp: BigInt): void {
 
@@ -101,17 +109,28 @@ export function handlenewInk(event: newInk): void {
   artist.save()
 
   incrementTotal('inks',event.block.timestamp)
+  updateMetaData('blockNumber',event.block.number.toString())
 }
 
-export function handleSetPrice(call: SetPriceCall): void {
+function _handleSetPrice(inkUrl: String, price: BigInt, timestamp: BigInt): void {
 
-  let ink = Ink.load(call.inputs.inkUrl)
+  let ink = Ink.load(inkUrl)
 
-  ink.mintPrice = call.inputs.price
-  ink.mintPriceSetAt = call.block.timestamp
+  ink.mintPrice = price
+  ink.mintPriceSetAt = timestamp
   ink.mintPriceNonce = ink.mintPriceNonce + BigInt.fromI32(1)
 
   ink.save()
+}
+
+export function handleSetPriceFromSignature(call: SetPriceFromSignatureCall): void {
+  _handleSetPrice(call.inputs.inkUrl, call.inputs.price, call.block.timestamp)
+  updateMetaData('blockNumber',call.block.number.toString())
+}
+
+export function handleSetPrice(call: SetPriceCall): void {
+  _handleSetPrice(call.inputs.inkUrl, call.inputs.price, call.block.timestamp)
+  updateMetaData('blockNumber',call.block.number.toString())
 }
 
 export function handleSetTokenPrice(call: SetTokenPriceCall): void {
@@ -122,6 +141,7 @@ export function handleSetTokenPrice(call: SetTokenPriceCall): void {
   token.priceSetAt = call.block.timestamp
 
   token.save()
+  updateMetaData('blockNumber',call.block.number.toString())
 }
 
 export function handleMintedInk(event: mintedInk): void {
@@ -145,6 +165,7 @@ export function handleMintedInk(event: mintedInk): void {
   token.save()
 
   incrementTotal('tokens',event.block.timestamp)
+  updateMetaData('blockNumber',event.block.number.toString())
 }
 
 export function handleTransfer(event: Transfer): void {
@@ -158,6 +179,7 @@ export function handleTransfer(event: Transfer): void {
     token.price = null
     token.priceSetAt = null
     token.save()
+    updateMetaData('blockNumber',event.block.number.toString())
   }
 
   let transfer = new TokenTransfer(event.transaction.hash.toHex())
@@ -175,6 +197,7 @@ export function handleTransfer(event: Transfer): void {
   }
 
   transfer.save()
+  updateMetaData('blockNumber',event.block.number.toString())
 }
 
 export function handleBoughtInk(event: boughtInk): void {
@@ -219,6 +242,7 @@ export function handleBoughtInk(event: boughtInk): void {
   sale.save()
 
   incrementTotal('sales',event.block.timestamp)
+  updateMetaData('blockNumber',event.block.number.toString())
 }
 
 export function handleMintedOnMain (event: mintedInk): void {
@@ -229,6 +253,7 @@ export function handleMintedOnMain (event: mintedInk): void {
   token.upgradeTransfer = event.transaction.hash.toHex()
 
   token.save()
+  updateMetaData('blockNumber',event.block.number.toString())
 }
 
 export function handleTokenSentViaBridge (event: tokenSentViaBridge): void {
@@ -241,6 +266,7 @@ export function handleTokenSentViaBridge (event: tokenSentViaBridge): void {
   token.save()
 
   incrementTotal('upgrades',event.block.timestamp)
+  updateMetaData('blockNumber',event.block.number.toString())
 }
 
 export function handleNewRelayPrice (event: newPrice): void {
@@ -256,4 +282,5 @@ export function handleNewRelayPrice (event: newPrice): void {
   updatedPrice.price = event.params.price
   updatedPrice.createdAt = event.block.timestamp
   updatedPrice.save()
+  updateMetaData('blockNumber',event.block.number.toString())
 }

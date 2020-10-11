@@ -74,6 +74,11 @@ type RelayPrice @entity {
   price: BigInt!
 }
 
+type MetaData @entity {
+  id: ID!
+  value: String!
+}
+
 type Total @entity {
   id: ID!
   day: BigInt

@@ -26,6 +26,8 @@ dataSources:
       callHandlers:
         - function: setPrice(string,uint256)
           handler: handleSetPrice
+        - function: setPriceFromSignature(string,uint256,bytes)
+          handler: handleSetPriceFromSignature
       file: ./src/mapping.ts
   - kind: ethereum/contract
     name: NiftyToken
