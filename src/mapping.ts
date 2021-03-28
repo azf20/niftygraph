@@ -68,52 +68,28 @@ import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total, MetaData, I
 
 function checkBestPrice(ink: Ink | null): Ink | null {
 
-  log.info('checkBestPrice', [])
-
   if(ink !== null) {
-    log.info('Ink is not null, mintprice: {}', [ink.mintPrice.toString()])
     if(ink.mintPrice.isZero()) {
-      log.info('mintPrice is zero {}', [ink.mintPrice.toString()])
       ink.bestPrice = BigInt.fromI32(0)
       ink.bestPriceSource = null
       ink.bestPriceSetAt = null
     } else {
-      log.info('mintPrice is not null {}', [ink.mintPrice.toString()])
       ink.bestPrice = ink.mintPrice
       ink.bestPriceSource = 'ink'
       ink.bestPriceSetAt = ink.mintPriceSetAt
     }
-
-    log.info('Checking best price: {}, {}', [
-      ink.mintPrice.toString(),
-      ink.id,
-    ])
 
     for (let i = 0, len=ink.tokens.length; i < len; i++) {
         let tokens = ink.tokens
         let id = tokens[i]
         let token = Token.load(id)
 
-        log.info('Checking token: {} out of {}', [
-          id,
-          len.toString()
-        ])
         if(token.price > BigInt.fromI32(0)) {
-          log.info('Checking tokenPrice: {} vs {}', [
-            token.price.toString(),
-            ink.bestPrice.toString()
-          ])
           if(ink.bestPrice.isZero()) {
-            log.info('Setting first price from a token: {}', [
-              token.price.toString(),
-            ])
             ink.bestPrice = token.price
             ink.bestPriceSource = id
             ink.bestPriceSetAt = token.priceSetAt
           } else if (token.price < ink.bestPrice) {
-            log.info('Token has a lower price: {}', [
-              token.price.toString(),
-            ])
             ink.bestPrice = token.price as BigInt
             ink.bestPriceSource = id
             ink.bestPriceSetAt = token.priceSetAt
@@ -252,14 +228,10 @@ export function handleMintedInk(event: mintedInk): void {
 
   if (ink.count == ink.limit && ink.limit != BigInt.fromI32(1)) {
 
-    log.info('Doing the price check thing: {}', [
-      ink.id,
-    ])
     ink.mintPrice = BigInt.fromI32(0)
     ink.mintPriceSetAt = event.block.timestamp
 
     if(ink.bestPrice > BigInt.fromI32(0)) {
-      log.info('Best price is not null', [])
       ink = checkBestPrice(ink)
     }
   }
@@ -350,6 +322,7 @@ export function handleBoughtInk(event: boughtInk): void {
       sale.saleType = "secondary"
       sale.artistTake = (((event.transaction.value).times(BigInt.fromI32(1))) / BigInt.fromI32(100))
       sale.seller = transfer.from
+      artist.earnings = artist.earnings + sale.artistTake
     }
   }
 
@@ -362,6 +335,7 @@ export function handleBoughtInk(event: boughtInk): void {
   sale.transfer = event.transaction.hash.toHex()
 
   sale.save()
+  artist.save()
 
   incrementTotal('sales',event.block.timestamp)
   updateMetaData('blockNumber',event.block.number.toString())
