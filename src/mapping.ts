@@ -146,6 +146,7 @@ export function handlenewInk(event: newInk): void {
   ink.tokens = []
   ink.mintPrice = BigInt.fromI32(0)
   ink.bestPrice = BigInt.fromI32(0)
+  ink.likeCount = BigInt.fromI32(0)
 
   ink.save()
   artist.save()
@@ -206,6 +207,7 @@ export function handleSetTokenPrice(call: SetTokenPriceCall): void {
     if(ink.bestPrice.isZero()) {
       ink.bestPrice = token.price
       ink.bestPriceSource = token.id
+      ink.bestPriceSetAt = token.priceSetAt
     } else if (token.price < ink.bestPrice) {
       ink.bestPrice = token.price
       ink.bestPriceSource = token.id
@@ -384,6 +386,9 @@ export function handleNewRelayPrice (event: newPrice): void {
 export function handleLikedInk (event: liked): void {
 
   let inkLookup = InkLookup.load(event.params.target.toString())
+  let ink = Ink.load(inkLookup.inkId)
+  ink.likeCount = ink.likeCount + BigInt.fromI32(1)
+  ink.save()
 
   let newLike = new Like(event.transaction.hash.toHex() + "-" + event.logIndex.toString())
   newLike.liker = event.params.liker

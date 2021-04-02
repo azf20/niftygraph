@@ -25,6 +25,7 @@ type Ink @entity {
   bestPrice: BigInt!
   bestPriceSource: String
   bestPriceSetAt: BigInt
+  likeCount: BigInt
 }
 
 type Token @entity {
