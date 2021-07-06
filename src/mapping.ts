@@ -110,10 +110,17 @@ export function handlenewInk(event: newInk): void {
     artist.address = event.params.artist
     artist.inkCount = BigInt.fromI32(1)
     artist.earnings = BigInt.fromI32(0)
+    artist.likeCount = BigInt.fromI32(0)
+    artist.saleCount = BigInt.fromI32(0)
+    artist.lastLikeAt = BigInt.fromI32(0)
+    artist.lastSaleAt = BigInt.fromI32(0)
+    artist.createdAt = event.block.timestamp
+    artist.lastInkAt = event.block.timestamp
     incrementTotal('artists',event.block.timestamp)
   }
   else {
     artist.inkCount = artist.inkCount.plus(BigInt.fromI32(1))
+    artist.lastInkAt = event.block.timestamp
   }
 
   let ink = Ink.load(event.params.inkUrl)
@@ -328,6 +335,9 @@ export function handleBoughtInk(event: boughtInk): void {
     }
   }
 
+  artist.saleCount = artist.saleCount.plus(BigInt.fromI32(1))
+  artist.lastSaleAt = event.block.timestamp
+
   sale.token = tokenId
   sale.price = event.transaction.value
   sale.buyer = event.transaction.from
@@ -394,6 +404,12 @@ export function handleLikedInk (event: liked): void {
   newLike.liker = event.params.liker
   newLike.ink = inkLookup.inkId
   newLike.createdAt = event.block.timestamp
+  newLike.artist = ink.artist
   newLike.save()
+
+  let artist = Artist.load(ink.artist)
+  artist.likeCount = artist.likeCount.plus(BigInt.fromI32(1))
+  artist.lastLikeAt = event.block.timestamp
+  artist.save()
 
 }
