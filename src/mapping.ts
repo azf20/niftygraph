@@ -324,12 +324,12 @@ export function handleBoughtInk(event: boughtInk): void {
   if (transfer !== null) {
     if (transfer.from == Address.fromString("0x0000000000000000000000000000000000000000") || transfer.from == artist.address) {
       sale.saleType = "primary"
-      sale.artistTake = event.transaction.value
+      sale.artistTake = event.params.price
       sale.seller = artist.address
-      artist.earnings = artist.earnings + event.transaction.value
+      artist.earnings = artist.earnings + event.params.price
     } else {
       sale.saleType = "secondary"
-      sale.artistTake = (((event.transaction.value).times(BigInt.fromI32(1))) / BigInt.fromI32(100))
+      sale.artistTake = (((event.params.price).times(BigInt.fromI32(1))) / BigInt.fromI32(100))
       sale.seller = transfer.from
       artist.earnings = artist.earnings + sale.artistTake
     }
@@ -339,8 +339,8 @@ export function handleBoughtInk(event: boughtInk): void {
   artist.lastSaleAt = event.block.timestamp
 
   sale.token = tokenId
-  sale.price = event.transaction.value
-  sale.buyer = event.transaction.from
+  sale.price = event.params.price
+  sale.buyer = event.params.buyer
   sale.artist = ink.artist
   sale.ink = event.params.inkUrl
   sale.createdAt = event.block.timestamp
