@@ -138,6 +138,23 @@ export class Ink extends Entity {
     }
   }
 
+  get tokenTransfers(): Array<string> | null {
+    let value = this.get("tokenTransfers");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set tokenTransfers(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("tokenTransfers");
+    } else {
+      this.set("tokenTransfers", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
   get createdAt(): BigInt | null {
     let value = this.get("createdAt");
     if (value === null) {
@@ -257,6 +274,32 @@ export class Ink extends Entity {
       this.set("likeCount", Value.fromBigInt(value as BigInt));
     }
   }
+
+  get burnedCount(): BigInt | null {
+    let value = this.get("burnedCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set burnedCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("burnedCount");
+    } else {
+      this.set("burnedCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get burned(): boolean {
+    let value = this.get("burned");
+    return value.toBoolean();
+  }
+
+  set burned(value: boolean) {
+    this.set("burned", Value.fromBoolean(value));
+  }
 }
 
 export class Token extends Entity {
@@ -351,6 +394,23 @@ export class Token extends Entity {
     }
   }
 
+  get transferCount(): BigInt | null {
+    let value = this.get("transferCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set transferCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("transferCount");
+    } else {
+      this.set("transferCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
   get transfers(): Array<string> | null {
     let value = this.get("transfers");
     if (value === null) {
@@ -399,6 +459,32 @@ export class Token extends Entity {
       this.unset("upgradeTransfer");
     } else {
       this.set("upgradeTransfer", Value.fromString(value as string));
+    }
+  }
+
+  get burned(): boolean {
+    let value = this.get("burned");
+    return value.toBoolean();
+  }
+
+  set burned(value: boolean) {
+    this.set("burned", Value.fromBoolean(value));
+  }
+
+  get artist(): string | null {
+    let value = this.get("artist");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set artist(value: string | null) {
+    if (value === null) {
+      this.unset("artist");
+    } else {
+      this.set("artist", Value.fromString(value as string));
     }
   }
 }
@@ -508,6 +594,40 @@ export class Artist extends Entity {
       this.unset("likes");
     } else {
       this.set("likes", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get tokenTransfers(): Array<string> | null {
+    let value = this.get("tokenTransfers");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set tokenTransfers(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("tokenTransfers");
+    } else {
+      this.set("tokenTransfers", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get tokens(): Array<string> | null {
+    let value = this.get("tokens");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set tokens(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("tokens");
+    } else {
+      this.set("tokens", Value.fromStringArray(value as Array<string>));
     }
   }
 
@@ -741,6 +861,23 @@ export class Sale extends Entity {
   set transfer(value: string) {
     this.set("transfer", Value.fromString(value));
   }
+
+  get transactionHash(): string | null {
+    let value = this.get("transactionHash");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set transactionHash(value: string | null) {
+    if (value === null) {
+      this.unset("transactionHash");
+    } else {
+      this.set("transactionHash", Value.fromString(value as string));
+    }
+  }
 }
 
 export class TokenTransfer extends Entity {
@@ -823,6 +960,66 @@ export class TokenTransfer extends Entity {
       this.unset("network");
     } else {
       this.set("network", Value.fromString(value as string));
+    }
+  }
+
+  get ink(): string | null {
+    let value = this.get("ink");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set ink(value: string | null) {
+    if (value === null) {
+      this.unset("ink");
+    } else {
+      this.set("ink", Value.fromString(value as string));
+    }
+  }
+
+  get artist(): string | null {
+    let value = this.get("artist");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set artist(value: string | null) {
+    if (value === null) {
+      this.unset("artist");
+    } else {
+      this.set("artist", Value.fromString(value as string));
+    }
+  }
+
+  get transactionHash(): string {
+    let value = this.get("transactionHash");
+    return value.toString();
+  }
+
+  set transactionHash(value: string) {
+    this.set("transactionHash", Value.fromString(value));
+  }
+
+  get sale(): string | null {
+    let value = this.get("sale");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set sale(value: string | null) {
+    if (value === null) {
+      this.unset("sale");
+    } else {
+      this.set("sale", Value.fromString(value as string));
     }
   }
 }

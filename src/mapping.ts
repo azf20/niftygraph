@@ -154,6 +154,8 @@ export function handlenewInk(event: newInk): void {
   ink.mintPrice = BigInt.fromI32(0)
   ink.bestPrice = BigInt.fromI32(0)
   ink.likeCount = BigInt.fromI32(0)
+  ink.burnedCount = BigInt.fromI32(0)
+  ink.burned = false
 
   ink.save()
   artist.save()
@@ -256,6 +258,17 @@ export function handleMintedInk(event: mintedInk): void {
   token.createdAt = event.block.timestamp
   token.network = "xdai"
   token.price = BigInt.fromI32(0)
+  token.burned = false
+  token.transferCount = BigInt.fromI32(0)
+  token.artist = ink.artist
+
+  let tokenTransfer = new TokenTransfer(token.id + "-" + token.transferCount.toString())
+
+  if (tokenTransfer !== null) {
+    tokenTransfer.ink = token.ink
+    tokenTransfer.artist = ink.artist
+    tokenTransfer.save()
+  }
 
   ink.save()
   token.save()
@@ -269,6 +282,9 @@ export function handleTransfer(event: Transfer): void {
   let tokenId = event.params.tokenId.toString()
 
   let token = Token.load(tokenId)
+  let transferCount = BigInt.fromI32(0)
+  let inkId = ''
+  let artistId = ''
 
   if (token !== null) {
     token.owner = event.params.to
@@ -276,25 +292,40 @@ export function handleTransfer(event: Transfer): void {
     if(token.price > BigInt.fromI32(0)) {
       token.price = BigInt.fromI32(0)
       token.priceSetAt = event.block.timestamp
-      token.save()
+      token.transferCount = token.transferCount + BigInt.fromI32(1)
 
       let ink = Ink.load(token.ink)
       ink = checkBestPrice(ink)
+
+      if(event.params.to == Address.fromString("0x0000000000000000000000000000000000000000")) {
+        token.burned = true
+        ink.burnedCount = ink.burnedCount + BigInt.fromI32(1)
+        if(ink.burnedCount == ink.limit) {
+          ink.burned = true
+        }
+      }
+
+      inkId = token.ink
+      artistId = ink.artist
+
+      token.save()
       ink.save()
 
     } else {
       token.save()
     }
 
-    updateMetaData('blockNumber',event.block.number.toString())
   }
 
-  let transfer = new TokenTransfer(event.transaction.hash.toHex())
+  let transfer = new TokenTransfer(tokenId + "-" + token.transferCount.toString())
 
   transfer.token = tokenId
   transfer.to = event.params.to
   transfer.from = event.params.from
   transfer.createdAt = event.block.timestamp
+  transfer.transactionHash = event.transaction.hash.toHex()
+  transfer.ink = inkId
+  transfer.artist = artistId
 
   if(event.address == Address.fromString("0xCF964c89f509a8c0Ac36391c5460dF94B91daba5")) {
     transfer.network = 'xdai'
@@ -316,7 +347,7 @@ export function handleBoughtInk(event: boughtInk): void {
   let token = Token.load(tokenId)
   let ink = Ink.load(event.params.inkUrl)
   let artist = Artist.load(ink.artist)
-  let transfer = TokenTransfer.load(event.transaction.hash.toHex())
+  let transfer = TokenTransfer.load(tokenId + "-" + token.transferCount.toString())
 
   //let contract = NiftyInk.bind(Address.fromString("0x49dE55fbA08af88f55EB797a456fdf76B151c8b0"))
   //let artistTake = contract.artistTake()
@@ -333,6 +364,8 @@ export function handleBoughtInk(event: boughtInk): void {
       sale.seller = transfer.from
       artist.earnings = artist.earnings + sale.artistTake
     }
+    transfer.sale = event.transaction.hash.toHex() + "-" + event.logIndex.toString()
+    transfer.save()
   }
 
   artist.saleCount = artist.saleCount.plus(BigInt.fromI32(1))
@@ -344,7 +377,8 @@ export function handleBoughtInk(event: boughtInk): void {
   sale.artist = ink.artist
   sale.ink = event.params.inkUrl
   sale.createdAt = event.block.timestamp
-  sale.transfer = event.transaction.hash.toHex()
+  sale.transfer = tokenId + "-" + token.transferCount.toString()
+  sale.transactionHash = event.transaction.hash.toHex()
 
   sale.save()
   artist.save()
@@ -358,7 +392,7 @@ export function handleMintedOnMain (event: mintedInk): void {
   let token = Token.load(event.params.id.toString())
 
   token.network = "mainnet"
-  token.upgradeTransfer = event.transaction.hash.toHex()
+  token.upgradeTransfer = token.id + "-" + token.transferCount.toString()
 
   token.save()
   updateMetaData('blockNumber',event.block.number.toString())
