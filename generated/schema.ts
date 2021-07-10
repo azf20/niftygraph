@@ -487,6 +487,23 @@ export class Token extends Entity {
       this.set("artist", Value.fromString(value as string));
     }
   }
+
+  get edition(): BigInt | null {
+    let value = this.get("edition");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set edition(value: BigInt | null) {
+    if (value === null) {
+      this.unset("edition");
+    } else {
+      this.set("edition", Value.fromBigInt(value as BigInt));
+    }
+  }
 }
 
 export class Artist extends Entity {

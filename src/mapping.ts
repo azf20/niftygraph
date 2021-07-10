@@ -261,6 +261,7 @@ export function handleMintedInk(event: mintedInk): void {
   token.burned = false
   token.transferCount = BigInt.fromI32(0)
   token.artist = ink.artist
+  token.edition = ink.count
 
   let tokenTransfer = new TokenTransfer(token.id + "-" + token.transferCount.toString())
 
@@ -297,7 +298,7 @@ export function handleTransfer(event: Transfer): void {
       let ink = Ink.load(token.ink)
       ink = checkBestPrice(ink)
 
-      if(event.params.to == Address.fromString("0x0000000000000000000000000000000000000000")) {
+      if(event.params.to == Address.fromString("0x0000000000000000000000000000000000000000") || event.params.to == Address.fromString("0x000000000000000000000000000000000000dEaD")) {
         token.burned = true
         ink.burnedCount = ink.burnedCount + BigInt.fromI32(1)
         if(ink.burnedCount == ink.limit) {
