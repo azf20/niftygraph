@@ -289,34 +289,33 @@ export function handleTransfer(event: Transfer): void {
 
   if (token !== null) {
     token.owner = event.params.to
+    token.transferCount = token.transferCount + BigInt.fromI32(1)
+
+    let ink = Ink.load(token.ink)
+
+    inkId = token.ink
+    artistId = ink.artist
+
+    if(event.params.to == Address.fromString("0x0000000000000000000000000000000000000000") || event.params.to == Address.fromString("0x000000000000000000000000000000000000dEaD")) {
+      token.burned = true
+      ink.burnedCount = ink.burnedCount + BigInt.fromI32(1)
+      if(ink.burnedCount == ink.limit) {
+        ink.burned = true
+      }
+    }
 
     if(token.price > BigInt.fromI32(0)) {
       token.price = BigInt.fromI32(0)
       token.priceSetAt = event.block.timestamp
-      token.transferCount = token.transferCount + BigInt.fromI32(1)
-
-      let ink = Ink.load(token.ink)
-      ink = checkBestPrice(ink)
-
-      if(event.params.to == Address.fromString("0x0000000000000000000000000000000000000000") || event.params.to == Address.fromString("0x000000000000000000000000000000000000dEaD")) {
-        token.burned = true
-        ink.burnedCount = ink.burnedCount + BigInt.fromI32(1)
-        if(ink.burnedCount == ink.limit) {
-          ink.burned = true
-        }
-      }
-
-      inkId = token.ink
-      artistId = ink.artist
-
       token.save()
-      ink.save()
-
-    } else {
+      ink = checkBestPrice(ink)
+      }
+    else {
       token.save()
     }
 
-  }
+    ink.save()
+    }
 
   let transfer = new TokenTransfer(tokenId + "-" + token.transferCount.toString())
 
