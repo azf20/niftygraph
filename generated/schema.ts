@@ -78,21 +78,13 @@ export class Ink extends Entity {
     this.set("limit", Value.fromBigInt(value));
   }
 
-  get count(): BigInt | null {
+  get count(): BigInt {
     let value = this.get("count");
-    if (value === null) {
-      return null;
-    } else {
-      return value.toBigInt();
-    }
+    return value.toBigInt();
   }
 
-  set count(value: BigInt | null) {
-    if (value === null) {
-      this.unset("count");
-    } else {
-      this.set("count", Value.fromBigInt(value as BigInt));
-    }
+  set count(value: BigInt) {
+    this.set("count", Value.fromBigInt(value));
   }
 
   get tokens(): Array<string> {
@@ -341,13 +333,13 @@ export class Token extends Entity {
     this.set("ink", Value.fromString(value));
   }
 
-  get owner(): Bytes {
+  get owner(): string {
     let value = this.get("owner");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set owner(value: Bytes) {
-    this.set("owner", Value.fromBytes(value));
+  set owner(value: string) {
+    this.set("owner", Value.fromString(value));
   }
 
   get createdAt(): BigInt {
@@ -502,6 +494,23 @@ export class Token extends Entity {
       this.unset("edition");
     } else {
       this.set("edition", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get lastTransferAt(): BigInt | null {
+    let value = this.get("lastTransferAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastTransferAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("lastTransferAt");
+    } else {
+      this.set("lastTransferAt", Value.fromBigInt(value as BigInt));
     }
   }
 }
@@ -743,6 +752,420 @@ export class Artist extends Entity {
   }
 }
 
+export class User extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save User entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save User entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("User", id.toString(), this);
+  }
+
+  static load(id: string): User | null {
+    return store.get("User", id) as User | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get artist(): string | null {
+    let value = this.get("artist");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toString();
+    }
+  }
+
+  set artist(value: string | null) {
+    if (value === null) {
+      this.unset("artist");
+    } else {
+      this.set("artist", Value.fromString(value as string));
+    }
+  }
+
+  get address(): Bytes {
+    let value = this.get("address");
+    return value.toBytes();
+  }
+
+  set address(value: Bytes) {
+    this.set("address", Value.fromBytes(value));
+  }
+
+  get tokens(): Array<string> | null {
+    let value = this.get("tokens");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set tokens(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("tokens");
+    } else {
+      this.set("tokens", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get sales(): Array<string> | null {
+    let value = this.get("sales");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set sales(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("sales");
+    } else {
+      this.set("sales", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get purchases(): Array<string> | null {
+    let value = this.get("purchases");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set purchases(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("purchases");
+    } else {
+      this.set("purchases", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get likes(): Array<string> | null {
+    let value = this.get("likes");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set likes(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("likes");
+    } else {
+      this.set("likes", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get transfersFrom(): Array<string> | null {
+    let value = this.get("transfersFrom");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set transfersFrom(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("transfersFrom");
+    } else {
+      this.set("transfersFrom", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get transfersTo(): Array<string> | null {
+    let value = this.get("transfersTo");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toStringArray();
+    }
+  }
+
+  set transfersTo(value: Array<string> | null) {
+    if (value === null) {
+      this.unset("transfersTo");
+    } else {
+      this.set("transfersTo", Value.fromStringArray(value as Array<string>));
+    }
+  }
+
+  get tokenCount(): BigInt | null {
+    let value = this.get("tokenCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set tokenCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("tokenCount");
+    } else {
+      this.set("tokenCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get fromCount(): BigInt | null {
+    let value = this.get("fromCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set fromCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("fromCount");
+    } else {
+      this.set("fromCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get toCount(): BigInt | null {
+    let value = this.get("toCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set toCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("toCount");
+    } else {
+      this.set("toCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get likeCount(): BigInt | null {
+    let value = this.get("likeCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set likeCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("likeCount");
+    } else {
+      this.set("likeCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get purchaseCount(): BigInt | null {
+    let value = this.get("purchaseCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set purchaseCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("purchaseCount");
+    } else {
+      this.set("purchaseCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get purchaseValue(): BigInt | null {
+    let value = this.get("purchaseValue");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set purchaseValue(value: BigInt | null) {
+    if (value === null) {
+      this.unset("purchaseValue");
+    } else {
+      this.set("purchaseValue", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get saleCount(): BigInt | null {
+    let value = this.get("saleCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set saleCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("saleCount");
+    } else {
+      this.set("saleCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get saleValue(): BigInt | null {
+    let value = this.get("saleValue");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set saleValue(value: BigInt | null) {
+    if (value === null) {
+      this.unset("saleValue");
+    } else {
+      this.set("saleValue", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get lastLikeAt(): BigInt | null {
+    let value = this.get("lastLikeAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastLikeAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("lastLikeAt");
+    } else {
+      this.set("lastLikeAt", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get lastPurchaseAt(): BigInt | null {
+    let value = this.get("lastPurchaseAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastPurchaseAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("lastPurchaseAt");
+    } else {
+      this.set("lastPurchaseAt", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get lastSaleAt(): BigInt | null {
+    let value = this.get("lastSaleAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastSaleAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("lastSaleAt");
+    } else {
+      this.set("lastSaleAt", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get lastTransferAt(): BigInt | null {
+    let value = this.get("lastTransferAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastTransferAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("lastTransferAt");
+    } else {
+      this.set("lastTransferAt", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get createdAt(): BigInt | null {
+    let value = this.get("createdAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set createdAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("createdAt");
+    } else {
+      this.set("createdAt", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get lastInkAt(): BigInt | null {
+    let value = this.get("lastInkAt");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set lastInkAt(value: BigInt | null) {
+    if (value === null) {
+      this.unset("lastInkAt");
+    } else {
+      this.set("lastInkAt", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get inkCount(): BigInt | null {
+    let value = this.get("inkCount");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set inkCount(value: BigInt | null) {
+    if (value === null) {
+      this.unset("inkCount");
+    } else {
+      this.set("inkCount", Value.fromBigInt(value as BigInt));
+    }
+  }
+}
+
 export class Sale extends Entity {
   constructor(id: string) {
     super();
@@ -773,29 +1196,29 @@ export class Sale extends Entity {
     this.set("id", Value.fromString(value));
   }
 
-  get buyer(): Bytes {
+  get buyer(): string {
     let value = this.get("buyer");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set buyer(value: Bytes) {
-    this.set("buyer", Value.fromBytes(value));
+  set buyer(value: string) {
+    this.set("buyer", Value.fromString(value));
   }
 
-  get seller(): Bytes | null {
+  get seller(): string | null {
     let value = this.get("seller");
     if (value === null) {
       return null;
     } else {
-      return value.toBytes();
+      return value.toString();
     }
   }
 
-  set seller(value: Bytes | null) {
+  set seller(value: string | null) {
     if (value === null) {
       this.unset("seller");
     } else {
-      this.set("seller", Value.fromBytes(value as Bytes));
+      this.set("seller", Value.fromString(value as string));
     }
   }
 
@@ -936,22 +1359,22 @@ export class TokenTransfer extends Entity {
     this.set("token", Value.fromString(value));
   }
 
-  get from(): Bytes {
+  get from(): string {
     let value = this.get("from");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set from(value: Bytes) {
-    this.set("from", Value.fromBytes(value));
+  set from(value: string) {
+    this.set("from", Value.fromString(value));
   }
 
-  get to(): Bytes {
+  get to(): string {
     let value = this.get("to");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set to(value: Bytes) {
-    this.set("to", Value.fromBytes(value));
+  set to(value: string) {
+    this.set("to", Value.fromString(value));
   }
 
   get createdAt(): BigInt {
@@ -1261,6 +1684,207 @@ export class Total extends Entity {
       this.set("artists", Value.fromBigInt(value as BigInt));
     }
   }
+
+  get saleValue(): BigInt | null {
+    let value = this.get("saleValue");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set saleValue(value: BigInt | null) {
+    if (value === null) {
+      this.unset("saleValue");
+    } else {
+      this.set("saleValue", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get users(): BigInt | null {
+    let value = this.get("users");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set users(value: BigInt | null) {
+    if (value === null) {
+      this.unset("users");
+    } else {
+      this.set("users", Value.fromBigInt(value as BigInt));
+    }
+  }
+}
+
+export class DailyTotal extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id !== null, "Cannot save DailyTotal entity without an ID");
+    assert(
+      id.kind == ValueKind.STRING,
+      "Cannot save DailyTotal entity with non-string ID. " +
+        'Considering using .toHex() to convert the "id" to a string.'
+    );
+    store.set("DailyTotal", id.toString(), this);
+  }
+
+  static load(id: string): DailyTotal | null {
+    return store.get("DailyTotal", id) as DailyTotal | null;
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get day(): BigInt | null {
+    let value = this.get("day");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set day(value: BigInt | null) {
+    if (value === null) {
+      this.unset("day");
+    } else {
+      this.set("day", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get inks(): BigInt | null {
+    let value = this.get("inks");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set inks(value: BigInt | null) {
+    if (value === null) {
+      this.unset("inks");
+    } else {
+      this.set("inks", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get tokens(): BigInt | null {
+    let value = this.get("tokens");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set tokens(value: BigInt | null) {
+    if (value === null) {
+      this.unset("tokens");
+    } else {
+      this.set("tokens", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get sales(): BigInt | null {
+    let value = this.get("sales");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set sales(value: BigInt | null) {
+    if (value === null) {
+      this.unset("sales");
+    } else {
+      this.set("sales", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get upgrades(): BigInt | null {
+    let value = this.get("upgrades");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set upgrades(value: BigInt | null) {
+    if (value === null) {
+      this.unset("upgrades");
+    } else {
+      this.set("upgrades", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get artists(): BigInt | null {
+    let value = this.get("artists");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set artists(value: BigInt | null) {
+    if (value === null) {
+      this.unset("artists");
+    } else {
+      this.set("artists", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get saleValue(): BigInt | null {
+    let value = this.get("saleValue");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set saleValue(value: BigInt | null) {
+    if (value === null) {
+      this.unset("saleValue");
+    } else {
+      this.set("saleValue", Value.fromBigInt(value as BigInt));
+    }
+  }
+
+  get users(): BigInt | null {
+    let value = this.get("users");
+    if (value === null) {
+      return null;
+    } else {
+      return value.toBigInt();
+    }
+  }
+
+  set users(value: BigInt | null) {
+    if (value === null) {
+      this.unset("users");
+    } else {
+      this.set("users", Value.fromBigInt(value as BigInt));
+    }
+  }
 }
 
 export class InkLookup extends Entity {
@@ -1351,13 +1975,13 @@ export class Like extends Entity {
     this.set("artist", Value.fromString(value));
   }
 
-  get liker(): Bytes {
+  get liker(): string {
     let value = this.get("liker");
-    return value.toBytes();
+    return value.toString();
   }
 
-  set liker(value: Bytes) {
-    this.set("liker", Value.fromBytes(value));
+  set liker(value: string) {
+    this.set("liker", Value.fromString(value));
   }
 
   get createdAt(): BigInt {

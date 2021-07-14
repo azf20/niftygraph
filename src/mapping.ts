@@ -20,7 +20,7 @@ import {
 import {
   liked
 } from "../generated/Liker/Liker";
-import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total, MetaData, InkLookup, Like } from "../generated/schema"
+import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total, MetaData, InkLookup, Like, User, DailyTotal } from "../generated/schema"
 
 
  function updateMetaData(metric: String, value: String): void {
@@ -29,7 +29,7 @@ import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total, MetaData, I
    metaData.save()
  }
 
- function incrementTotal(metric: String, timestamp: BigInt): void {
+ function incrementTotal(metric: String, timestamp: BigInt, value: BigInt): void {
 
     let stats = Total.load("latest")
     let day = (timestamp / BigInt.fromI32(86400)) * BigInt.fromI32(86400)
@@ -45,25 +45,46 @@ import { Ink, Artist, Token, TokenTransfer, Sale, RelayPrice, Total, MetaData, I
       }
     }
 
+    let dailyStats = DailyTotal.load(day.toString())
+
+    if (dailyStats == null) {
+      dailyStats = new DailyTotal(day.toString())
+      dailyStats.day = day
+    }
+
     stats.day = day
 
     if(metric == 'inks') {
-      stats.inks = stats.inks + BigInt.fromI32(1)
+      stats.inks = stats.inks + value
+      dailyStats.inks = dailyStats.inks + value
     }
     else if (metric == 'tokens') {
-      stats.tokens = stats.tokens + BigInt.fromI32(1)
+      stats.tokens = stats.tokens + value
+      dailyStats.tokens = dailyStats.tokens + value
     }
     else if (metric == 'upgrades') {
-      stats.upgrades = stats.upgrades + BigInt.fromI32(1)
+      stats.upgrades = stats.upgrades + value
+      dailyStats.upgrades = dailyStats.upgrades + value
     }
     else if (metric == 'sales') {
-      stats.sales = stats.sales + BigInt.fromI32(1)
+      stats.sales = stats.sales + value
+      dailyStats.sales = dailyStats.sales + value
+    }
+    else if (metric == 'saleValue') {
+      stats.saleValue = stats.saleValue + value
+      dailyStats.saleValue = dailyStats.saleValue + value
     }
     else if (metric == 'artists') {
-      stats.artists = stats.artists + BigInt.fromI32(1)
+      stats.artists = stats.artists + value
+      dailyStats.artists = dailyStats.artists + value
+    }
+    else if (metric == 'users') {
+      stats.users = stats.users + value
+      dailyStats.users = dailyStats.users + value
     }
 
     stats.save()
+    dailyStats.save()
   }
 
 function checkBestPrice(ink: Ink | null): Ink | null {
@@ -116,12 +137,16 @@ export function handlenewInk(event: newInk): void {
     artist.lastSaleAt = BigInt.fromI32(0)
     artist.createdAt = event.block.timestamp
     artist.lastInkAt = event.block.timestamp
-    incrementTotal('artists',event.block.timestamp)
+    incrementTotal('artists',event.block.timestamp, BigInt.fromI32(1))
   }
   else {
     artist.inkCount = artist.inkCount.plus(BigInt.fromI32(1))
     artist.lastInkAt = event.block.timestamp
   }
+
+  let user = getUser(event.params.artist.toHexString(), event.block.timestamp)
+  user.lastInkAt = event.block.timestamp
+  user.inkCount = user.inkCount.plus(BigInt.fromI32(1))
 
   let ink = Ink.load(event.params.inkUrl)
 
@@ -154,17 +179,19 @@ export function handlenewInk(event: newInk): void {
   ink.mintPrice = BigInt.fromI32(0)
   ink.bestPrice = BigInt.fromI32(0)
   ink.likeCount = BigInt.fromI32(0)
+  ink.count = BigInt.fromI32(0)
   ink.burnedCount = BigInt.fromI32(0)
   ink.burned = false
 
   ink.save()
   artist.save()
+  user.save()
 
   let inkLookup = new InkLookup(ink.inkNumber.toString())
   inkLookup.inkId = ink.id
   inkLookup.save()
 
-  incrementTotal('inks',event.block.timestamp)
+  incrementTotal('inks',event.block.timestamp, BigInt.fromI32(1))
   updateMetaData('blockNumber',event.block.number.toString())
 }
 
@@ -237,6 +264,10 @@ export function handleMintedInk(event: mintedInk): void {
 
   ink.count = ink.count.plus(BigInt.fromI32(1))
 
+  if(event.params.to != Address.fromString("0x000000000000000000000000000000000000dEaD")) {
+    ink.burned = false
+  }
+
   if (ink.count == ink.limit && ink.limit != BigInt.fromI32(1)) {
 
     ink.mintPrice = BigInt.fromI32(0)
@@ -254,7 +285,7 @@ export function handleMintedInk(event: mintedInk): void {
   let token = new Token(event.params.id.toString())
 
   token.ink = event.params.inkUrl
-  token.owner = event.params.to
+  token.owner = event.params.to.toHexString()
   token.createdAt = event.block.timestamp
   token.network = "xdai"
   token.price = BigInt.fromI32(0)
@@ -274,7 +305,7 @@ export function handleMintedInk(event: mintedInk): void {
   ink.save()
   token.save()
 
-  incrementTotal('tokens',event.block.timestamp)
+  incrementTotal('tokens',event.block.timestamp, BigInt.fromI32(1))
   updateMetaData('blockNumber',event.block.number.toString())
 }
 
@@ -288,8 +319,9 @@ export function handleTransfer(event: Transfer): void {
   let artistId = ''
 
   if (token !== null) {
-    token.owner = event.params.to
+    token.owner = event.params.to.toHexString()
     token.transferCount = token.transferCount + BigInt.fromI32(1)
+    token.lastTransferAt = event.block.timestamp
 
     let ink = Ink.load(token.ink)
 
@@ -299,7 +331,7 @@ export function handleTransfer(event: Transfer): void {
     if(event.params.to == Address.fromString("0x0000000000000000000000000000000000000000") || event.params.to == Address.fromString("0x000000000000000000000000000000000000dEaD")) {
       token.burned = true
       ink.burnedCount = ink.burnedCount + BigInt.fromI32(1)
-      if(ink.burnedCount == ink.limit) {
+      if(ink.burnedCount >= ink.count) {
         ink.burned = true
       }
     }
@@ -320,8 +352,8 @@ export function handleTransfer(event: Transfer): void {
   let transfer = new TokenTransfer(tokenId + "-" + token.transferCount.toString())
 
   transfer.token = tokenId
-  transfer.to = event.params.to
-  transfer.from = event.params.from
+  transfer.to = event.params.to.toHexString()
+  transfer.from = event.params.from.toHexString()
   transfer.createdAt = event.block.timestamp
   transfer.transactionHash = event.transaction.hash.toHex()
   transfer.ink = inkId
@@ -336,6 +368,20 @@ export function handleTransfer(event: Transfer): void {
 
   transfer.save()
   updateMetaData('blockNumber',event.block.number.toString())
+
+  if(event.params.from !== Address.fromString("0x0000000000000000000000000000000000000000")) {
+    let fromUser = getUser(transfer.from, event.block.timestamp)
+    fromUser.tokenCount = fromUser.tokenCount.minus(BigInt.fromI32(1))
+    fromUser.fromCount = fromUser.fromCount.plus(BigInt.fromI32(1))
+    fromUser.lastTransferAt = event.block.timestamp
+    fromUser.save()
+  }
+
+  let toUser = getUser(transfer.to, event.block.timestamp)
+  toUser.tokenCount = toUser.tokenCount.plus(BigInt.fromI32(1))
+  toUser.toCount = toUser.toCount.plus(BigInt.fromI32(1))
+  toUser.lastTransferAt = event.block.timestamp
+  toUser.save()
 }
 
 export function handleBoughtInk(event: boughtInk): void {
@@ -353,10 +399,10 @@ export function handleBoughtInk(event: boughtInk): void {
   //let artistTake = contract.artistTake()
 
   if (transfer !== null) {
-    if (transfer.from == Address.fromString("0x0000000000000000000000000000000000000000") || transfer.from == artist.address) {
+    if (transfer.from == "0x0000000000000000000000000000000000000000" || transfer.from == artist.id) {
       sale.saleType = "primary"
       sale.artistTake = event.params.price
-      sale.seller = artist.address
+      sale.seller = artist.id
       artist.earnings = artist.earnings + event.params.price
     } else {
       sale.saleType = "secondary"
@@ -373,7 +419,7 @@ export function handleBoughtInk(event: boughtInk): void {
 
   sale.token = tokenId
   sale.price = event.params.price
-  sale.buyer = event.params.buyer
+  sale.buyer = event.params.buyer.toHexString()
   sale.artist = ink.artist
   sale.ink = event.params.inkUrl
   sale.createdAt = event.block.timestamp
@@ -383,8 +429,21 @@ export function handleBoughtInk(event: boughtInk): void {
   sale.save()
   artist.save()
 
-  incrementTotal('sales',event.block.timestamp)
+  incrementTotal('sales',event.block.timestamp, BigInt.fromI32(1))
+  incrementTotal('saleValue',event.block.timestamp, sale.price)
   updateMetaData('blockNumber',event.block.number.toString())
+
+  let buyingUser = getUser(sale.buyer, event.block.timestamp)
+  buyingUser.purchaseCount = buyingUser.purchaseCount.plus(BigInt.fromI32(1))
+  buyingUser.purchaseValue = buyingUser.purchaseValue + event.params.price
+  buyingUser.lastPurchaseAt = event.block.timestamp
+  buyingUser.save()
+
+  let sellingUser = getUser(sale.seller, event.block.timestamp)
+  sellingUser.saleCount = sellingUser.saleCount.plus(BigInt.fromI32(1))
+  sellingUser.saleValue = sellingUser.saleValue + event.params.price
+  sellingUser.lastSaleAt = event.block.timestamp
+  sellingUser.save()
 }
 
 export function handleMintedOnMain (event: mintedInk): void {
@@ -403,11 +462,11 @@ export function handleTokenSentViaBridge (event: tokenSentViaBridge): void {
   let token = Token.load(event.params._tokenId.toString())
 
   token.network = "mainnet"
-  token.upgradeTransfer = event.transaction.hash.toHex()
+  token.upgradeTransfer = token.id + "-" + token.transferCount.toString()
 
   token.save()
 
-  incrementTotal('upgrades',event.block.timestamp)
+  incrementTotal('upgrades',event.block.timestamp, BigInt.fromI32(1))
   updateMetaData('blockNumber',event.block.number.toString())
 }
 
@@ -435,7 +494,7 @@ export function handleLikedInk (event: liked): void {
   ink.save()
 
   let newLike = new Like(event.transaction.hash.toHex() + "-" + event.logIndex.toString())
-  newLike.liker = event.params.liker
+  newLike.liker = event.params.liker.toHexString()
   newLike.ink = inkLookup.inkId
   newLike.createdAt = event.block.timestamp
   newLike.artist = ink.artist
@@ -446,4 +505,39 @@ export function handleLikedInk (event: liked): void {
   artist.lastLikeAt = event.block.timestamp
   artist.save()
 
+  let user = getUser(event.params.liker.toHexString(), event.block.timestamp)
+  user.likeCount = user.likeCount.plus(BigInt.fromI32(1))
+  user.lastLikeAt = event.block.timestamp
+  user.save()
+
+}
+
+function getUser(id: String, timestamp: BigInt): User | null {
+
+  let user = User.load(id)
+
+  if (user == null) {
+    user = new User(id)
+    user.address = Address.fromString(id)
+    user.artist = id
+    user.tokenCount = BigInt.fromI32(0)
+    user.likeCount = BigInt.fromI32(0)
+    user.purchaseCount = BigInt.fromI32(0)
+    user.purchaseValue = BigInt.fromI32(0)
+    user.saleCount = BigInt.fromI32(0)
+    user.saleValue = BigInt.fromI32(0)
+    user.lastLikeAt = BigInt.fromI32(0)
+    user.lastPurchaseAt = BigInt.fromI32(0)
+    user.lastSaleAt = BigInt.fromI32(0)
+    user.fromCount = BigInt.fromI32(0)
+    user.toCount = BigInt.fromI32(0)
+    user.inkCount = BigInt.fromI32(0)
+    user.lastInkAt = BigInt.fromI32(0)
+    user.createdAt = timestamp
+    incrementTotal('users',timestamp, BigInt.fromI32(1))
+    return user
+  }
+  else {
+    return user
+  }
 }
