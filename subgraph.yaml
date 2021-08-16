@@ -11,7 +11,7 @@ dataSources:
       startBlock: 11296637
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
         - Ink
@@ -38,7 +38,7 @@ dataSources:
       startBlock: 11296637
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
         - Ink
@@ -61,31 +61,31 @@ dataSources:
         - function: setTokenPrice(uint256,uint256)
           handler: handleSetTokenPrice
       file: ./src/mapping.ts
-#  - kind: ethereum/contract
-#    name: NiftyMain
-#    network: mainnet
-#    source:
-#      address: "0xc02697c417DdAcfbe5EdbF23eDad956BC883F4fb"
-#      abi: NiftyMain
-#      startBlock: 10609660
-#    mapping:
-#      kind: ethereum/events
-#      apiVersion: 0.0.4
-#      language: wasm/assemblyscript
-#      entities:
-#        - Token
-#        - Transfer
-#      abis:
-#        - name: NiftyMain
-#          file: ./abis/NiftyMain.json
-#        - name: NiftyToken
-#          file: ./abis/NiftyToken.json
-#      eventHandlers:
-#        - event: Transfer(indexed address,indexed address,indexed uint256)
-#          handler: handleTransfer
-#        - event: mintedInk(uint256,string,address)
-#          handler: handleMintedOnMain
-#      file: ./src/mapping.ts
+  #  - kind: ethereum/contract
+  #    name: NiftyMain
+  #    network: mainnet
+  #    source:
+  #      address: "0xc02697c417DdAcfbe5EdbF23eDad956BC883F4fb"
+  #      abi: NiftyMain
+  #      startBlock: 10609660
+  #    mapping:
+  #      kind: ethereum/events
+  #      apiVersion: 0.0.4
+  #      language: wasm/assemblyscript
+  #      entities:
+  #        - Token
+  #        - Transfer
+  #      abis:
+  #        - name: NiftyMain
+  #          file: ./abis/NiftyMain.json
+  #        - name: NiftyToken
+  #          file: ./abis/NiftyToken.json
+  #      eventHandlers:
+  #        - event: Transfer(indexed address,indexed address,indexed uint256)
+  #          handler: handleTransfer
+  #        - event: mintedInk(uint256,string,address)
+  #          handler: handleMintedOnMain
+  #      file: ./src/mapping.ts
   - kind: ethereum/contract
     name: NiftyMediator
     network: xdai
@@ -95,7 +95,7 @@ dataSources:
       startBlock: 11296637
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
         - Token
@@ -119,7 +119,7 @@ dataSources:
       startBlock: 11296637
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.4
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
         - InkLookUp
