@@ -58,6 +58,11 @@ function incrementTotal(metric: String, timestamp: BigInt): void {
     }
   } else if (stats === null) {
     stats = new Total("latest");
+    stats.inks = BigInt.fromI32(0);
+    stats.tokens = BigInt.fromI32(0);
+    stats.upgrades = BigInt.fromI32(0);
+    stats.sales = BigInt.fromI32(0);
+    stats.artists = BigInt.fromI32(0);
   }
 
   stats.day = day;
