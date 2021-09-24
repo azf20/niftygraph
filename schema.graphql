@@ -46,7 +46,7 @@ type Token @entity {
   burned: Boolean
   artist: Artist
   edition: BigInt
-  lastTransferAt: BigInt
+  lastTransferAt: BigInt!
 }
 
 type Artist @entity {

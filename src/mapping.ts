@@ -287,6 +287,7 @@ export function handleMintedInk(event: mintedInk): void {
   token.ink = event.params.inkUrl
   token.owner = event.params.to.toHexString()
   token.createdAt = event.block.timestamp
+  token.lastTransferAt = event.block.timestamp
   token.network = "xdai"
   token.price = BigInt.fromI32(0)
   token.burned = false
