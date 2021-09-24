@@ -182,6 +182,10 @@ function _handleSetPrice(
   let ink = Ink.load(inkUrl);
 
   if (ink) {
+    let mintPriceNonce = ink.mintPriceNonce;
+    if (!mintPriceNonce) {
+      ink.mintPriceNonce = BigInt.zero();
+    }
     ink.mintPriceNonce = ink.mintPriceNonce + BigInt.fromI32(1);
     ink.mintPrice = price;
     ink.mintPriceSetAt = timestamp;
@@ -195,6 +199,8 @@ function _handleSetPrice(
         ink.bestPrice = price;
         ink.bestPriceSource = "ink";
         ink.bestPriceSetAt = timestamp;
+      } else {
+        ink = checkBestPrice(ink);
       }
     } else {
       ink = checkBestPrice(ink);
