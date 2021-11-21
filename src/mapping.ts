@@ -336,6 +336,12 @@ export function handleMintedInk(event: mintedInk): void {
       tokenTransfer.save()
     }
 
+    if(event.params.to.toHexString() == ink.artist) {
+      token.collector = null
+    } else {
+      token.collector = event.params.to.toHexString()
+    }
+
     ink.save()
     token.save()
 
